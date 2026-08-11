@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumeFit - Tailor your resume to any job in seconds</title>
+<meta name="description" content="Paste your resume and a job posting. Get an ATS-optimized resume and cover letter tailored to that exact job in seconds.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <div class="brand">Resume<span>Fit</span></div>
+      <h1>Tailor your resume to <em>this exact job</em> in 20 seconds</h1>
+      <p class="sub">Paste your resume and the job posting. Get back a keyword-matched, ATS-friendly resume plus a real cover letter &mdash; not a generic one.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="freeBanner" class="banner"></div>
+
+    <section class="card">
+      <div class="grid2">
+        <div>
+          <label for="resume">Your current resume</label>
+          <textarea id="resume" placeholder="Paste your resume text here..."></textarea>
+        </div>
+        <div>
+          <label for="jobPosting">The job posting</label>
+          <textarea id="jobPosting" placeholder="Paste the full job description here..."></textarea>
+        </div>
+      </div>
+      <button id="generateBtn" class="btn primary">Tailor my resume &rarr;</button>
+      <div id="errorBox" class="error" style="display:none;"></div>
+    </section>
+
+    <section id="resultSection" class="card" style="display:none;">
+      <div class="tabs">
+        <button class="tab active" data-tab="resume">Tailored Resume</button>
+        <button class="tab" data-tab="cover">Cover Letter</button>
+      </div>
+      <div id="resumeOut" class="output"></div>
+      <div id="coverOut" class="output" style="display:none;"></div>
+      <div class="output-actions">
+        <button id="copyBtn" class="btn ghost">Copy text</button>
+        <button id="downloadBtn" class="btn ghost">Download .txt</button>
+      </div>
+    </section>
+
+    <section id="payCard" class="card pay" style="display:none;">
+      <h2>You're out of free tailorings for today</h2>
+      <p>Get <span id="packCredits">20</span> more tailorings for <span id="packPrice">$9</span> &mdash; no subscription, use them whenever you want.</p>
+      <button id="buyBtn" class="btn primary">Buy credits &rarr;</button>
+    </section>
+
+    <footer class="footer">
+      <p>Your resume text is sent to an AI model to generate results and is not stored or shared. Built to help you land interviews faster.</p>
+    </footer>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
