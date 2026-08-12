@@ -9,8 +9,8 @@ const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || 'missing' });
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_missing', { apiVersion: '2024-06-20' });
+const anthropic = new Anthropic({ apiKey: (process.env.ANTHROPIC_API_KEY || 'missing').trim() });
+const stripe = new Stripe((process.env.STRIPE_SECRET_KEY || 'sk_test_missing').trim(), { apiVersion: '2024-06-20' });
 
 const FREE_DAILY = parseInt(process.env.FREE_DAILY_GENERATIONS || '2', 10);
 const PACK_PRICE = parseInt(process.env.CREDIT_PACK_PRICE_USD || '9', 10);
