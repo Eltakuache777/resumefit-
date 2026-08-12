@@ -39,11 +39,8 @@ app.post('/api/generate', async (req, res) => {
     }
 
     const ip = getClientIp(req);
-    let usedCredit = false;
-    if (licenseKey && store.getCredits(licenseKey) > 0) {
-      store.useCredit(licenseKey);
-      usedCredit = true;
-    } else {
+    const usedCredit = Boolean(licenseKey && store.getCredits(licenseKey) > 0);
+    if (!usedCredit) {
       const freeLeft = store.getFreeUsesLeft(ip, FREE_DAILY);
       if (freeLeft <= 0) {
         return res.status(402).json({
@@ -51,7 +48,6 @@ app.post('/api/generate', async (req, res) => {
           message: "You've used today's free tailorings. Buy a credit pack to keep going."
         });
       }
-      store.recordFreeUse(ip);
     }
 
     if (!process.env.ANTHROPIC_API_KEY) {
@@ -87,6 +83,12 @@ Output strictly in this format with these exact headers and nothing else before 
     const parts = text.split('===COVER LETTER===');
     const tailoredResume = (parts[0] || '').replace('===RESUME===', '').trim();
     const coverLetter = (parts[1] || '').trim();
+
+    if (usedCredit) {
+      store.useCredit(licenseKey);
+    } else {
+      store.recordFreeUse(ip);
+    }
 
     res.json({ resume: tailoredResume || text, coverLetter, usedCredit });
   } catch (err) {
