@@ -14,11 +14,23 @@ app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
 function sanitizeKey(value) {
-  return (value || '').replace(/\s+/g, '');
+  // Keep only characters that are actually valid in Anthropic/Stripe API keys, stripping
+  // anything else (whitespace, control characters, stray Unicode) that could otherwise make
+  // the key an illegal HTTP header value and crash the request.
+  return (value || '').replace(/[^A-Za-z0-9_-]/g, '');
 }
 
-const anthropic = new Anthropic({ apiKey: sanitizeKey(process.env.ANTHROPIC_API_KEY) || 'missing' });
-const stripe = new Stripe(sanitizeKey(process.env.STRIPE_SECRET_KEY) || 'sk_test_missing', { apiVersion: '2024-06-20' });
+const cleanAnthropicKey = sanitizeKey(process.env.ANTHROPIC_API_KEY);
+const cleanStripeKey = sanitizeKey(process.env.STRIPE_SECRET_KEY);
+console.log(
+  `ANTHROPIC_API_KEY: raw length ${(process.env.ANTHROPIC_API_KEY || '').length}, sanitized length ${cleanAnthropicKey.length} (expect ~108 for a real key)`
+);
+console.log(
+  `STRIPE_SECRET_KEY: raw length ${(process.env.STRIPE_SECRET_KEY || '').length}, sanitized length ${cleanStripeKey.length}`
+);
+
+const anthropic = new Anthropic({ apiKey: cleanAnthropicKey || 'missing' });
+const stripe = new Stripe(cleanStripeKey || 'sk_test_missing', { apiVersion: '2024-06-20' });
 
 const FREE_DAILY = parseInt(process.env.FREE_DAILY_GENERATIONS || '2', 10);
 const PACK_PRICE = parseInt(process.env.CREDIT_PACK_PRICE_USD || '9', 10);
