@@ -27,7 +27,14 @@
 <body>
   <header class="hero">
     <div class="wrap">
-      <div class="brand">Resume<span>Fit</span></div>
+      <div class="navbar" style="justify-content:space-between;padding-top:0;">
+        <div class="brand" style="margin-bottom:0;">Resume<span>Fit</span></div>
+        <div style="display:flex;gap:16px;">
+          <a href="/admin.html" id="adminLink" style="display:none;">Admin</a>
+          <a href="/account.html">Account</a>
+          <button id="logoutBtn">Log out</button>
+        </div>
+      </div>
       <h1>Tailor your resume to <em>this exact job</em> in 20 seconds</h1>
       <p class="sub">Paste your resume and the job posting. Get back a keyword-matched, ATS-friendly resume plus a real cover letter &mdash; not a generic one.</p>
     </div>
@@ -75,6 +82,7 @@
     </footer>
   </main>
 
+  <script src="/auth-common.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

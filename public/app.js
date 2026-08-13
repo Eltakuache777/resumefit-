@@ -1,22 +1,7 @@
 const $ = (sel) => document.querySelector(sel);
 
 let config = { freeDaily: 2, packPrice: 9, packCredits: 20 };
-
-function getLicenseKey() {
-  return localStorage.getItem('rf_license') || '';
-}
-function setLicenseKey(k) {
-  localStorage.setItem('rf_license', k);
-}
-function todayCountKey() {
-  return 'rf_used_' + new Date().toISOString().slice(0, 10);
-}
-function getLocalFreeUsedToday() {
-  return parseInt(localStorage.getItem(todayCountKey()) || '0', 10);
-}
-function bumpLocalFreeUsedToday() {
-  localStorage.setItem(todayCountKey(), String(getLocalFreeUsedToday() + 1));
-}
+let me = null;
 
 async function loadConfig() {
   try {
@@ -24,20 +9,20 @@ async function loadConfig() {
     config = await r.json();
     $('#packCredits').textContent = config.packCredits;
     $('#packPrice').textContent = '$' + config.packPrice;
-    renderBanner();
   } catch (e) {
     // ignore, defaults are fine
   }
 }
 
 function renderBanner() {
-  const used = getLocalFreeUsedToday();
-  const left = Math.max(0, config.freeDaily - used);
   const banner = $('#freeBanner');
-  if (getLicenseKey()) {
-    banner.textContent = `You have paid credits available on this browser.`;
+  if (!me) return;
+  if (me.freeAccess) {
+    banner.textContent = 'You have free unlimited access.';
+  } else if (me.credits > 0) {
+    banner.textContent = `You have ${me.credits} paid credit(s) available.`;
   } else {
-    banner.textContent = `${left} of ${config.freeDaily} free tailorings left today.`;
+    banner.textContent = `${config.freeDaily} free tailorings per day. Logged in as ${me.email}.`;
   }
 }
 
@@ -48,9 +33,11 @@ async function handleSuccessRedirect() {
   try {
     const r = await fetch('/api/verify-session?session_id=' + encodeURIComponent(sessionId));
     const data = await r.json();
-    if (data.paid && data.licenseKey) {
-      setLicenseKey(data.licenseKey);
-      alert(`Payment received! ${data.credits} credits added to this browser. Save code ${data.licenseKey} in case you switch devices.`);
+    if (data.paid && data.forDifferentAccount) {
+      alert('Payment received, but for a different account than the one currently logged in. Log into that account to see the credits.');
+    } else if (data.paid) {
+      alert(`Payment received! You now have ${data.credits} credits.`);
+      me = await requireLoggedIn();
     }
   } catch (e) {
     console.error(e);
@@ -58,6 +45,11 @@ async function handleSuccessRedirect() {
   window.history.replaceState({}, '', window.location.pathname);
   renderBanner();
 }
+
+$('#logoutBtn').addEventListener('click', async () => {
+  await apiPost('/api/auth/logout');
+  window.location.href = '/login.html';
+});
 
 $('#generateBtn').addEventListener('click', async () => {
   const resume = $('#resume').value.trim();
@@ -80,13 +72,16 @@ $('#generateBtn').addEventListener('click', async () => {
     const res = await fetch('/api/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume, jobPosting, licenseKey: getLicenseKey() })
+      body: JSON.stringify({ resume, jobPosting })
     });
     const data = await res.json();
 
+    if (res.status === 401) {
+      window.location.href = '/login.html';
+      return;
+    }
     if (res.status === 402) {
       $('#payCard').style.display = 'block';
-      renderBanner();
       return;
     }
     if (!res.ok) {
@@ -95,7 +90,7 @@ $('#generateBtn').addEventListener('click', async () => {
       return;
     }
 
-    if (!data.usedCredit) bumpLocalFreeUsedToday();
+    if (data.usedCredit) me.credits = Math.max(0, me.credits - 1);
     $('#resumeOut').textContent = data.resume;
     $('#coverOut').textContent = data.coverLetter;
     $('#resultSection').style.display = 'block';
@@ -160,5 +155,11 @@ $('#buyBtn').addEventListener('click', async () => {
   }
 });
 
-loadConfig();
-handleSuccessRedirect();
+(async () => {
+  me = await requireLoggedIn();
+  if (!me) return;
+  if (me.isAdmin) $('#adminLink').style.display = 'inline';
+  await loadConfig();
+  renderBanner();
+  await handleSuccessRedirect();
+})();

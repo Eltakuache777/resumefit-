@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - ResumeFit</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="wrap">
+    <div class="navbar">
+      <a href="/">&larr; Back to app</a>
+      <a href="/account.html">Account</a>
+      <button id="logoutBtn">Log out</button>
+    </div>
+
+    <section class="card">
+      <h1 style="font-size:22px;margin-top:0;">Users</h1>
+      <p class="sub" style="margin-bottom:20px;">Toggle free access to give someone unlimited use without paying.</p>
+      <div id="adminError" class="error" style="display:none;"></div>
+      <table class="admin" id="usersTable">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Admin</th>
+            <th>Free access</th>
+            <th>Credits</th>
+            <th>Joined</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </section>
+  </main>
+  <script src="/auth-common.js"></script>
+  <script src="/admin.js"></script>
+</body>
+</html>

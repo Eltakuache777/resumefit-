@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign up - ResumeFit</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="authwrap">
+    <div class="brand" style="text-align:center;margin-bottom:24px;">Resume<span>Fit</span></div>
+    <div class="authcard">
+
+      <div id="stepEmail">
+        <h1>Create your account</h1>
+        <p class="sub">We'll email you a 6-digit code to verify it's really you.</p>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <button id="sendCodeBtn" class="btn primary">Send verification code &rarr;</button>
+        <div id="emailError" class="error" style="display:none;"></div>
+      </div>
+
+      <div id="stepCode" style="display:none;">
+        <h1>Enter your code</h1>
+        <p class="sub">We sent a 6-digit code to <strong id="codeEmailLabel"></strong>.</p>
+        <div class="field">
+          <label for="code">Verification code</label>
+          <input type="text" id="code" placeholder="123456" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+        </div>
+        <button id="verifyCodeBtn" class="btn primary">Verify code &rarr;</button>
+        <div id="codeError" class="error" style="display:none;"></div>
+      </div>
+
+      <div id="stepPassword" style="display:none;">
+        <h1>Create a password</h1>
+        <p class="sub">At least 8 characters.</p>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="********" autocomplete="new-password">
+        </div>
+        <button id="setPasswordBtn" class="btn primary">Create account &rarr;</button>
+        <div id="passwordError" class="error" style="display:none;"></div>
+      </div>
+
+      <div class="authfoot">Already have an account? <a class="authlink" href="/login.html">Log in</a></div>
+    </div>
+  </div>
+  <script src="/auth-common.js"></script>
+  <script src="/signup.js"></script>
+</body>
+</html>
