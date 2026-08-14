@@ -7,7 +7,7 @@ const Stripe = require('stripe');
 const store = require('./lib/store');
 const db = require('./lib/db');
 const auth = require('./lib/auth');
-const { sendVerificationCode } = require('./lib/email');
+const { sendVerificationCode, sendPasswordResetCode } = require('./lib/email');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -185,6 +185,74 @@ app.post('/api/auth/change-password', auth.requireAuth, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Could not change password.' });
+  }
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const email = (req.body?.email || '').trim().toLowerCase();
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Please enter a valid email.' });
+    }
+
+    const user = await store.getUserByEmail(email);
+    if (user) {
+      const existingReset = await store.getPasswordReset(email);
+      if (existingReset && Date.now() - new Date(existingReset.last_sent_at).getTime() < CODE_RESEND_COOLDOWN_MS) {
+        return res.status(429).json({ error: 'Please wait a bit before requesting another code.' });
+      }
+      const code = auth.generateCode();
+      const codeHash = await auth.hashPassword(code);
+      const expiresAt = new Date(Date.now() + CODE_TTL_MINUTES * 60 * 1000);
+      await store.createPasswordReset(email, codeHash, expiresAt);
+      await sendPasswordResetCode(email, code);
+    }
+    // Always respond the same way whether or not an account exists for this email,
+    // so this endpoint can't be used to check which emails are registered.
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not send reset code. Please try again.' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const email = (req.body?.email || '').trim().toLowerCase();
+    const code = (req.body?.code || '').trim();
+    const newPassword = req.body?.newPassword || '';
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'New password must be at least 8 characters.' });
+    }
+
+    const reset = await store.getPasswordReset(email);
+    if (!reset) return res.status(400).json({ error: 'No reset request found for that email. Please start over.' });
+    if (new Date(reset.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'That code expired. Please request a new one.' });
+    }
+    if (reset.attempts >= CODE_MAX_ATTEMPTS) {
+      await store.deletePasswordReset(email);
+      return res.status(429).json({ error: 'Too many incorrect attempts. Please request a new code.' });
+    }
+    const ok = await auth.verifyPassword(code, reset.code_hash);
+    if (!ok) {
+      await store.incrementPasswordResetAttempts(email);
+      return res.status(400).json({ error: 'That code is incorrect.' });
+    }
+
+    const user = await store.getUserByEmail(email);
+    if (!user) return res.status(400).json({ error: 'No account found for that email.' });
+
+    const newHash = await auth.hashPassword(newPassword);
+    await store.updateUserPassword(user.id, newHash);
+    await store.deletePasswordReset(email);
+
+    // Log them straight in so a successful reset doesn't leave anyone stuck at the login screen.
+    auth.issueSession(res, user.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not reset password. Please try again.' });
   }
 });
 
